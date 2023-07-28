@@ -17,12 +17,26 @@ interface HeaderProps {
     className?: string;
 }
 
+
+function getWelcomeMessage():string {
+    const currentHour = Date.now();
+
+    if (currentHour >= 0 && currentHour < 12) {
+        return "Good Morning";
+    } else if (currentHour >= 12 && currentHour < 18) {
+        return "Good Afternoon";
+    } else {
+        return "Good Evening";
+    }
+}
+
+
 export function Header({ children, className }: HeaderProps) {
     const AuthModal = useAuthModal();
     const router = useRouter();
 
     const supabaseClient = useSupabaseClient();
-    const { user, subscription } = useUser();
+    const { user, userDetails, subscription } = useUser();
 
     const HandleLogout = async () => {
         const { error } = await supabaseClient.auth.signOut();
@@ -85,7 +99,12 @@ export function Header({ children, className }: HeaderProps) {
                     )}
                 </div>
             </div>
-            {children}
+            <div className="mb-2">
+            <h1>
+                 { getWelcomeMessage() } <strong>{userDetails?.full_name}</strong>
+            </h1>
+                {children}
+            </div>
         </div>
     )
 } 

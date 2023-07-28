@@ -91,7 +91,7 @@ export function UploadModal() {
                 toast.error("Failed to insert song into database")
             }
 
-            router.refresh
+            router.refresh()
             setIsLoading(false)
             toast.success("Song uploaded successfully")
             reset()
