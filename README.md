@@ -1,6 +1,6 @@
 ## Spotify Clone
 
-#Functionalities
+### Functionalities:
 - Playing songs
 - Upload songs
 - Authentication
