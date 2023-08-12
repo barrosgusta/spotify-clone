@@ -69,15 +69,6 @@ export default function PlayerContent({ song, songUrl }: PlayerContentProps) {
         }
     )
 
-
-    useEffect(() => {
-        sound?.play()
-
-        return () => {
-            sound?.unload()
-        }
-    }, [sound])
-
     useEffect(() => {
         sound?.play()
 
