@@ -9,21 +9,44 @@ import { AiFillStepBackward, AiFillStepForward } from "react-icons/ai";
 import Slider from "./Slider";
 import usePlayer from "@/hooks/usePlayer";
 import { useEffect, useState } from "react";
-import useSound from "use-sound";
-import * as howler from "howler";
+import { Player, Reverb } from "tone";
 
 interface PlayerContentProps {
     song: Song;
     songUrl: string;
+    audioPlayer?: Player;
+    audioReverb?: Reverb;
 }
 
-export default function PlayerContent({ song, songUrl }: PlayerContentProps) {
+export default function PlayerContent({ song, songUrl, audioPlayer, audioReverb }: PlayerContentProps) {
     const player = usePlayer()
     const [volume, setVolume] = useState(1)
+    const [playbackRate, setPlaybackRate] = useState(1)
+    const [audioReverbWetness, setRevertWetness] = useState(0)
     const [isPlaying, setIsPlaying] = useState(false)
 
     const Icon = isPlaying ? BsPauseFill : BsPlayFill
     const VolumeIcon = volume === 0 ? HiSpeakerXMark : HiSpeakerWave
+
+    // async function startSong() {        
+    //     audioPlayer?.start()
+    //     setIsPlaying(true)
+    // }
+
+    // audioPlayer !== undefined && audioPlayer.loaded && startSong()
+
+    useEffect(() => {
+        async function loadSong() {
+            if (audioPlayer !== undefined) {
+                await audioPlayer.load(songUrl)
+                audioPlayer.start()
+                setIsPlaying(true)
+                console.log("Song loaded")
+            }
+        }
+
+        loadSong()
+    }, [songUrl, audioPlayer])
 
     const onPlayNext = () => {
         if (player.ids.length === 0) {
@@ -55,40 +78,60 @@ export default function PlayerContent({ song, songUrl }: PlayerContentProps) {
         player.setId(prevSong)
     }
 
-    const [play, { pause, sound, duration  }] = useSound(
-        songUrl,
-        {
-            volume: volume,
-            onplay: () => setIsPlaying(true),
-            onend: () => {
-                setIsPlaying(false),
-                onPlayNext()
-            },
-            onpause: () => setIsPlaying(false),
-            format: ["mp3"]
-        }
-    )
+
+
 
     useEffect(() => {
-        sound?.play()
-
-        return () => {
-            sound?.unload()
+        if (audioPlayer !== undefined) {
+            audioReverb !== undefined && audioPlayer.connect(audioReverb)
         }
-    }, [sound])
+    }, [audioReverb])
 
+    useEffect(() => {
+        if (audioPlayer !== undefined) {
+            audioPlayer.volume.value = volume
+        }
+    }, [volume])
+
+    useEffect(() => {
+        if (audioPlayer !== undefined) {
+            audioPlayer.playbackRate = playbackRate
+        }
+    }, [playbackRate])
+
+    useEffect(() => {
+        if (audioReverb !== undefined) {
+            audioReverb.wet.value = audioReverbWetness
+        }
+    }, [audioReverbWetness])
+
+    
     const handlePlay = () => {
         if (!isPlaying) {
-            play()
+            setPlaybackRate(1)
+            if (audioPlayer !== undefined) {
+                audioPlayer.playbackRate = playbackRate;
+            }
+            setIsPlaying(true)
         } else {
-            pause()
+            setPlaybackRate(0)
+            if (audioPlayer !== undefined) {
+                audioPlayer.playbackRate = playbackRate;
+            }
+            setIsPlaying(false)
         }
     }
 
     const toggleMute = () => {
         if (volume === 0) {
+            if (audioPlayer !== undefined) {
+                audioPlayer.mute = false
+            }
             setVolume(1)
         } else {
+            if (audioPlayer !== undefined) {
+                audioPlayer.mute = true
+            }
             setVolume(0)
         }
     } 
@@ -127,9 +170,11 @@ export default function PlayerContent({ song, songUrl }: PlayerContentProps) {
             
 
             <div className="hidden md:flex w-full justify-end pr-2">
-                <div className="flex items-center gap-x-2 w-[120px]">
+                <div className="inline-flex items-center gap-x-2 w-72">
                     <VolumeIcon onClick={toggleMute} className="cursor-pointer" size={30} />
                     <Slider value={volume} onChange={(value) => setVolume(value)} />
+                    <Slider value={playbackRate} max={2} step={0.01} onChange={(value) => setPlaybackRate(value)} />
+                    <Slider value={audioReverbWetness} step={0.01} onChange={(value) => setRevertWetness(value)} />
                 </div>
             </div>
         </div>
