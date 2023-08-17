@@ -202,7 +202,7 @@ export default function PlayerContent({ song, songUrl, audioPlayer, audioReverb 
             <div className="hidden md:flex w-full justify-end pr-2">
                 <div className="inline-flex items-center gap-x-2 w-72">
                     <VolumeIcon onClick={toggleMute} className="cursor-pointer" size={40} />
-                    <Slider value={volume} onChange={(value) => setVolume(value)} max={0} min={-69} />
+                    <Slider value={volume} onChange={setVolume} max={0} min={-69} />
                     <Slider value={playbackRate} max={2} step={0.01} onChange={setPlaybackRate} />
                     <Slider value={audioReverbWetness} step={0.01} onChange={setRevertWetness} />
                 </div>
