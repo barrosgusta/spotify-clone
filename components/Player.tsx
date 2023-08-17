@@ -3,15 +3,9 @@
 import useGetSongById from "@/hooks/useGetSongById"
 import useLoadSongUrl from "@/hooks/useLoadSongUrl"
 import usePlayer from "@/hooks/usePlayer"
-import { url } from "inspector"
-import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
 import { Reverb, Player as TonePlayer } from "tone"
-
-const PlayerContent = dynamic(
-    () => import("./PlayerContent"),
-    { ssr: false }
-  )
+import PlayerContent from "./PlayerContent"
 
 export function Player() {
     const player = usePlayer()
@@ -34,7 +28,7 @@ export function Player() {
     }
 
     return (
-        <div className="fixed bottom-0 bg-black w-full py-2 h-[80px] px-4">
+        <div className="fixed bottom-0 bg-black w-full py-2 h-24 px-4">
             <PlayerContent key={songUrl} songUrl={songUrl} song={song} audioPlayer={tonePlayer} audioReverb={toneReverb} />
         </div>
     )
