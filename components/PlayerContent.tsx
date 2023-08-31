@@ -8,32 +8,33 @@ import { MediaItem } from "./MediaItem";
 import { AiFillStepBackward, AiFillStepForward } from "react-icons/ai";
 import Slider from "./Slider";
 import usePlayer from "@/hooks/usePlayer";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Player, Reverb } from "tone";
-import { set } from "react-hook-form";
-import { get } from "http";
 import useInterval from "@/hooks/useInterval";
+import { PlayerWithSettings } from "./Player";
 
 interface PlayerContentProps {
     song: Song;
     songUrl: string;
-    audioPlayer?: Player;
-    audioReverb?: Reverb;
+    // playerWithSettings.player?: Player;
+    // playerWithSettings.reverb?: Reverb;
+    playerWithSettings: PlayerWithSettings;
 }
 
-export default function PlayerContent({ song, songUrl, audioPlayer, audioReverb }: PlayerContentProps) {
+export default function PlayerContent({ song, songUrl/* , playerWithSettings.player, playerWithSettings.reverb */, playerWithSettings }: PlayerContentProps) {
     const player = usePlayer()
-    const [volume, setVolume] = useState(1)
-    const [playbackRate, setPlaybackRate] = useState(1)
+    // const [volume, setVolume] = useState(-3)
+    // const [playbackRate, setPlaybackRate] = useState(1)
+    // const [lastPlaybackRate, setLastPlaybackRate] = useState(1)
     const [progress, setProgress] = useState(0)
     const [progressMinutesSeconds, setProgressMinutesSeconds] = useState("0:00")
     const [duration, setDuration] = useState(0)
     const [durationMinutesSeconds, setDurationMinutesSeconds] = useState("0:00")
-    const [audioReverbWetness, setRevertWetness] = useState(0)
+    // const [playerWithSettings.reverbWetness, setRevertWetness] = useState(0)
     const [isPlaying, setIsPlaying] = useState(false)
 
     const Icon = isPlaying ? BsPauseFill : BsPlayFill
-    const VolumeIcon = volume === -69 ? HiSpeakerXMark : HiSpeakerWave
+    const VolumeIcon = playerWithSettings.volume === -69 ? HiSpeakerXMark : HiSpeakerWave
 
     function getMinutesSeconds(seconds: number) {
         let durationMinutes = 0 
@@ -49,18 +50,20 @@ export default function PlayerContent({ song, songUrl, audioPlayer, audioReverb 
 
     useEffect(() => {
         async function loadSong() {
-            if (audioPlayer !== undefined) {
-                await audioPlayer.load(songUrl)
-                audioPlayer.start()
+            if (playerWithSettings.player !== undefined) {
+                await playerWithSettings.player.load(songUrl)
+                playerWithSettings.player.start()
+                playerWithSettings.player.volume.value = playerWithSettings.volume
+                playerWithSettings.player.playbackRate = playerWithSettings.playbackRate
                 setIsPlaying(true)
-                setDuration(audioPlayer.buffer.duration)
-                setDurationMinutesSeconds(getMinutesSeconds(audioPlayer.buffer.duration))
+                setDuration(playerWithSettings.player.buffer.duration)
+                setDurationMinutesSeconds(getMinutesSeconds(playerWithSettings.player.buffer.duration))
                 console.log("Song loaded")
             }
         }
 
         loadSong()
-    }, [songUrl, audioPlayer])
+    }, [songUrl, playerWithSettings.player])
 
     const onPlayNext = () => {
         if (player.ids.length === 0) {
@@ -93,32 +96,32 @@ export default function PlayerContent({ song, songUrl, audioPlayer, audioReverb 
     }
 
     useEffect(() => {
-        if (audioPlayer !== undefined) {
-            audioReverb !== undefined && audioPlayer.connect(audioReverb)
+        if (playerWithSettings.player !== undefined) {
+            playerWithSettings.reverb !== undefined && playerWithSettings.player.connect(playerWithSettings.reverb)
         }
-    }, [audioReverb])
+    }, [playerWithSettings.reverb])
 
     useEffect(() => {
-        if (audioPlayer !== undefined) {
-            audioPlayer.volume.value = volume
+        if (playerWithSettings.player !== undefined) {
+            playerWithSettings.player.volume.value = playerWithSettings.volume
         }
-    }, [volume])
+    }, [playerWithSettings.volume])
 
     useEffect(() => {
-        if (audioPlayer !== undefined) {
-            audioPlayer.playbackRate = playbackRate
+        if (playerWithSettings.player !== undefined) {
+            playerWithSettings.player.playbackRate = playerWithSettings.playbackRate
         }
-    }, [playbackRate])
+    }, [playerWithSettings.playbackRate])
 
     useEffect(() => {
-        if (audioReverb !== undefined) {
-            audioReverb.wet.value = audioReverbWetness
+        if (playerWithSettings.reverb !== undefined) {
+            playerWithSettings.reverb.wet.value = playerWithSettings.reverbWetness
         }
-    }, [audioReverbWetness])
+    }, [playerWithSettings.reverbWetness])
 
     useInterval(() => {
-        if ((audioPlayer !== undefined) && (audioPlayer.loaded) && (progress <= duration)) {
-            setProgress(progress + playbackRate)
+        if ((playerWithSettings.player !== undefined) && (playerWithSettings.player.loaded) && (progress <= duration)) {
+            setProgress(progress + playerWithSettings.playbackRate)
             let progressMinutes = 0
             let progressSeconds = 0
             progressMinutes = progress / 60
@@ -128,7 +131,7 @@ export default function PlayerContent({ song, songUrl, audioPlayer, audioReverb 
             setProgressMinutesSeconds(`${progressMinutes}:${progressSeconds < 10 ? `0${progressSeconds}` : progressSeconds}`)
         } 
         
-        if ((audioPlayer !== undefined) && (audioPlayer.loaded) && (progress >= duration)) {
+        if ((playerWithSettings.player !== undefined) && (playerWithSettings.player.loaded) && (progress >= duration)) {
             onPlayNext()
         }
     }, 1000)
@@ -136,32 +139,33 @@ export default function PlayerContent({ song, songUrl, audioPlayer, audioReverb 
     
     const handlePlay = () => {
         if (!isPlaying) {
-            setPlaybackRate(1)
-            if (audioPlayer !== undefined) {
-                audioPlayer.playbackRate = playbackRate;
+            playerWithSettings.setPlaybackRate(playerWithSettings.lastPlaybackRate)
+            if (playerWithSettings.player !== undefined) {
+                playerWithSettings.player.playbackRate = playerWithSettings.playbackRate;
             }
             setIsPlaying(true)
         } else {
-            setPlaybackRate(0)
-            if (audioPlayer !== undefined) {
-                audioPlayer.playbackRate = playbackRate;
+            playerWithSettings.setLastPlaybackRate(playerWithSettings.playbackRate)
+            playerWithSettings.setPlaybackRate(0)
+            if (playerWithSettings.player !== undefined) {
+                playerWithSettings.player.playbackRate = playerWithSettings.playbackRate;
             }
             setIsPlaying(false)
         }
     }
 
     const handleProgressChange = (value: number) => {
-        if (audioPlayer !== undefined) {
-            audioPlayer.seek(value)
+        if (playerWithSettings.player !== undefined) {
+            playerWithSettings.player.seek(value)
             setProgress(value)
         }
     }
 
     const toggleMute = () => {
-        if (volume === -69) {
-            setVolume(0)
+        if (playerWithSettings.volume === -69) {
+            playerWithSettings.setVolume(0)
         } else {
-            setVolume(-69)
+            playerWithSettings.setVolume(-69)
         }
     } 
 
@@ -202,9 +206,9 @@ export default function PlayerContent({ song, songUrl, audioPlayer, audioReverb 
             <div className="hidden md:flex w-full justify-end pr-2">
                 <div className="inline-flex items-center gap-x-2 w-72">
                     <VolumeIcon onClick={toggleMute} className="cursor-pointer" size={40} />
-                    <Slider value={volume} onChange={setVolume} max={0} min={-69} />
-                    <Slider value={playbackRate} max={2} step={0.01} onChange={setPlaybackRate} />
-                    <Slider value={audioReverbWetness} step={0.01} onChange={setRevertWetness} />
+                    <Slider value={playerWithSettings.volume} onChange={playerWithSettings.setVolume} max={-3} min={-69} />
+                    <Slider value={playerWithSettings.playbackRate} max={2} step={0.01} onChange={playerWithSettings.setPlaybackRate} />
+                    <Slider value={playerWithSettings.reverbWetness} step={0.01} onChange={playerWithSettings.setReverbWetness} />
                 </div>
             </div>
         </div>
